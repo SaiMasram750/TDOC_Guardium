@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { encryptVault } from "../utils/CryptoService";
-import { writeVaultHash, getVaultHash, verifyVault } from "../utils/web3Service"; // Ensure this imports correctly
+import { writeVaultHash } from "../utils/web3Service"; // Ensure this imports correctly
 import Toast from './Toast';
-// import { getCurrentDomain } from "../utils/Tabs";
+import { getCurrentDomain } from "../utils/Tabs";
 
 export default function Vault({ vault, masterKey, onUpdate }) {
   const [domain, setDomain] = useState("");
@@ -10,10 +10,6 @@ export default function Vault({ vault, masterKey, onUpdate }) {
   const [pendingData, setPendingData] = useState(null); 
   const [localAccounts, setLocalAccounts] = useState([]);
   const [isSaving, setIsSaving] = useState(false); // New state to track saving progress
-  const [vaultHash, setVaultHash] = useState(null);
-  const [isVerified, setIsVerified] = useState(false);
-  const [userAddress, setUserAddress] = useState(null);
-  const [isLoadingBlockchain, setIsLoadingBlockchain] = useState(false);
 // 1. Initialize Accounts & Sync to Session
   useEffect(() => {
     const initialAccounts = Array.isArray(vault) ? vault : (vault?.accounts || []);
@@ -39,51 +35,18 @@ export default function Vault({ vault, masterKey, onUpdate }) {
   }, [vault]);
 
   // 2. Load Domain & Check for Pending Logins
-  useEffect(() => {
-    getCurrentDomain().then(d => setDomain(d || ""));
+  // useEffect(() => {
+  //   getCurrentDomain().then(d => setDomain(d || ""));
 
-    if (typeof chrome !== "undefined" && chrome.storage) {
-      chrome.storage.local.get("pendingLogin", (result) => {
-        if (result.pendingLogin) {
-          console.log("✅ Pending Login Found:", result.pendingLogin);
-          setPendingData(result.pendingLogin);
-        }
-      });
-    }
-  }, []);
-
-  // 3. Load Blockchain Vault Status
-  useEffect(() => {
-    loadBlockchainStatus();
-  }, [vault, masterKey]);
-
-  const loadBlockchainStatus = async () => {
-    setIsLoadingBlockchain(true);
-    try {
-      // Get user address from Web3
-      if (typeof window.ethereum !== "undefined") {
-        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-        if (accounts && accounts.length > 0) {
-          setUserAddress(accounts[0]);
-          
-          // Get vault hash from blockchain
-          const hash = await getVaultHash(accounts[0]);
-          setVaultHash(hash);
-
-          // Verify if local vault matches blockchain
-          if (vault && hash) {
-            const encrypted = await encryptVault(vault, masterKey);
-            const isValid = await verifyVault(accounts[0], encrypted);
-            setIsVerified(isValid);
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Error loading blockchain status:", err);
-    } finally {
-      setIsLoadingBlockchain(false);
-    }
-  };
+  //   if (typeof chrome !== "undefined" && chrome.storage) {
+  //     chrome.storage.local.get("pendingLogin", (result) => {
+  //       if (result.pendingLogin) {
+  //         console.log("✅ Pending Login Found:", result.pendingLogin);
+  //         setPendingData(result.pendingLogin);
+  //       }
+  //     });
+  //   }
+  // }, []);
 
   // 🔒 THE FIXED SAVE FUNCTION (Integrity + Storage)
   // const handleSave = async () => {
@@ -147,41 +110,41 @@ export default function Vault({ vault, masterKey, onUpdate }) {
   //   }
   // };
 
-  // // --- FILTERING & ACTIONS ---
+  // --- FILTERING & ACTIONS ---
   
-  // const visibleAccounts = localAccounts.filter(account => {
-  //   const searchLower = searchQuery.toLowerCase();
-  //   if (searchQuery) {
-  //     return (
-  //       account.site.toLowerCase().includes(searchLower) ||
-  //       (account.username && account.username.toLowerCase().includes(searchLower))
-  //     );
-  //   }
-  //   if (!domain) return true;
-  //   return domain.toLowerCase().includes(account.site.toLowerCase()) || 
-  //          account.site.toLowerCase().includes(domain.toLowerCase());
-  // });
+  const visibleAccounts = localAccounts.filter(account => {
+    const searchLower = searchQuery.toLowerCase();
+    if (searchQuery) {
+      return (
+        account.site.toLowerCase().includes(searchLower) ||
+        (account.username && account.username.toLowerCase().includes(searchLower))
+      );
+    }
+    if (!domain) return true;
+    return domain.toLowerCase().includes(account.site.toLowerCase()) || 
+           account.site.toLowerCase().includes(domain.toLowerCase());
+  });
 
-  // const autofill = (username, password, site) => {
-  //   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-  //     if (!tabs[0]?.id || tabs[0].url?.startsWith("chrome://")) return;
+  const autofill = (username, password, site) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      if (!tabs[0]?.id || tabs[0].url?.startsWith("chrome://")) return;
 
-  //     chrome.tabs.sendMessage(
-  //       tabs[0].id,
-  //       { type: "FILL_CREDENTIALS", credentials: { username, password } },
-  //       (response) => {
-  //         if (chrome.runtime.lastError) return;
-  //         if (!response?.filled) showToast("No login fields found", "warning");
-  //         else showToast(`Filled ${site}`, "success");
-  //       }
-  //     );
-  //   });
-  // };
+      chrome.tabs.sendMessage(
+        tabs[0].id,
+        { type: "FILL_CREDENTIALS", credentials: { username, password } },
+        (response) => {
+          if (chrome.runtime.lastError) return;
+          if (!response?.filled) showToast("No login fields found", "warning");
+          else showToast(`Filled ${site}`, "success");
+        }
+      );
+    });
+  };
 
-  // const handleCopy = (text, type) => {
-  //   navigator.clipboard.writeText(text);
-  //   showToast(`${type} copied!`, "success");
-  // };
+  const handleCopy = (text, type) => {
+    navigator.clipboard.writeText(text);
+    showToast(`${type} copied!`, "success");
+  };
 
   return (
     <div style={styles.container}>
@@ -191,34 +154,7 @@ export default function Vault({ vault, masterKey, onUpdate }) {
       <div style={styles.content}>
         <h1 style={styles.title}>Your Vault</h1>
 
-        {/* � BLOCKCHAIN STATUS CARD */}
-        <div style={styles.blockchainCard}>
-          <div style={styles.blockchainHeader}>
-            <span style={styles.blockchainIcon}>🔗</span>
-            <div style={styles.blockchainInfo}>
-              <p style={styles.blockchainLabel}>Blockchain Status</p>
-              <p style={styles.blockchainAddress}>
-                {userAddress ? `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}` : "Not Connected"}
-              </p>
-            </div>
-          </div>
-          <div style={styles.blockchainDetails}>
-            <div style={styles.statusRow}>
-              <span style={styles.statusLabel}>Vault Hash:</span>
-              <span style={styles.statusValue}>
-                {isLoadingBlockchain ? "Loading..." : (vaultHash && vaultHash !== "0x0000000000000000000000000000000000000000000000000000000000000000" ? "✓ Synced" : "✗ Not Synced")}
-              </span>
-            </div>
-            <div style={styles.statusRow}>
-              <span style={styles.statusLabel}>Verification:</span>
-              <span style={{...styles.statusValue, color: isVerified ? "#10b981" : "#ef4444"}}>
-                {isLoadingBlockchain ? "Checking..." : (isVerified ? "✓ Verified" : "✗ Unverified")}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* �🔔 PENDING SAVE CARD */}
+        {/* 🔔 PENDING SAVE CARD */}
         {pendingData && (
           <div style={styles.pendingCard}>
             <div style={styles.pendingHeader}>
@@ -292,10 +228,9 @@ export default function Vault({ vault, masterKey, onUpdate }) {
   );
 }
 
-// ... (KEEP YOUR STYLES EXACTLY AS BEFORE) ...
 const styles = {
   container: {
-    width: '100%',
+    width: '100vh',
     height: '100%',
     backgroundColor: '#0f172a',
     display: 'flex',
@@ -372,41 +307,6 @@ const styles = {
   discardButton: {
     flex: 1, background: 'transparent', color: '#94a3b8', border: '1px solid #475569',
     padding: '8px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', fontSize: '12px'
-  },
-  // BLOCKCHAIN STATUS CARD STYLES
-  blockchainCard: {
-    width: '100%', maxWidth: '320px', backgroundColor: '#1e293b', borderRadius: '12px',
-    padding: '12px', border: '1px solid #8b5cf6', boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)',
-    marginBottom: '8px', animation: 'slideIn 0.3s ease-out'
-  },
-  blockchainHeader: {
-    display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px'
-  },
-  blockchainIcon: {
-    fontSize: '20px'
-  },
-  blockchainInfo: {
-    flex: 1, minWidth: 0
-  },
-  blockchainLabel: {
-    color: '#8b5cf6', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', margin: 0
-  },
-  blockchainAddress: {
-    color: '#e2e8f0', fontSize: '13px', fontWeight: '600', margin: '2px 0 0 0', fontFamily: 'monospace'
-  },
-  blockchainDetails: {
-    display: 'flex', flexDirection: 'column', gap: '8px'
-  },
-  statusRow: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '8px', backgroundColor: 'rgba(15, 23, 42, 0.5)', borderRadius: '6px', 
-    border: '1px solid #334155'
-  },
-  statusLabel: {
-    color: '#64748b', fontSize: '12px', fontWeight: '500'
-  },
-  statusValue: {
-    color: '#10b981', fontSize: '12px', fontWeight: '600'
   }
 };
 

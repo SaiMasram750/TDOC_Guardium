@@ -5,7 +5,7 @@ import createMetaMaskProvider from "metamask-extension-provider";
 // CONFIG
 // -----------------------------------
 export const VAULT_REGISTRY_ADDRESS =
-  " 0xA3C615C9F645f5e8461f2f2179605e3D36f42E19";
+  "0x12e913CE401F854A6e43A84F4417e347e2788663";
 
 export const VAULT_REGISTRY_ABI = [
   "function updateVaultHash(bytes32 vaultHash)",

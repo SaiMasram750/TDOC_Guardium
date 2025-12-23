@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 // import Header from "./components/Header";
 import Login from "./components/Login";
 import Vault from "./components/Vault";
-// import AddPassword from "./components/AddPassword";
+import AddPassword from "./components/AddPassword";
 import "./App.css";
 
 export default function App() {

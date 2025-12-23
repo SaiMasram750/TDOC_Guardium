@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Guardium_Tdoc",
+  "name": "Guardium",
   "description": "Password manager",
   "version": "1.0",
 
@@ -9,11 +9,20 @@
     "default_title": "Open Guardium"
   },
 
-  "icons": {
-    "16": "logo192.png",
-    "48": "logo192.png",
-    "128": "logo192.png"
-  }, 
+  
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["contextScript.js"],
+      "all_frames": true,
+      "run_at": "document_end"
+    }
+  ],
 
   "permissions": ["activeTab", "tabs", "storage","scripting"],
   "host_permissions": ["<all_urls>"]
