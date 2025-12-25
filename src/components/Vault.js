@@ -230,7 +230,7 @@ export default function Vault({ vault, masterKey, onUpdate }) {
 
 const styles = {
   container: {
-    width: '100vh',
+    width: '100vw',
     height: '100%',
     backgroundColor: '#0f172a',
     display: 'flex',
@@ -259,16 +259,16 @@ const styles = {
   searchInput: {
     width: '100%', padding: '12px 36px 12px 16px', backgroundColor: '#1e293b',
     borderRadius: '16px', color: '#e2e8f0', border: '1px solid #334155', outline: 'none',
-    textAlign: 'center'
+    textAlign: 'center',boxSizing: 'border-box'
   },
   clearButton: {
     position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-    background: 'none', border: 'none', color: '#64748b', fontSize: '20px', cursor: 'pointer'
-  },
+    background: 'none', border: 'none', color: '#64748b', fontSize: '20px', cursor: 'pointer',padding :'4px'
+  },//Added padding 4px for better click area
   vaultList: {
     width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column',
-    gap: '12px', overflowY: 'auto', maxHeight: '400px', paddingRight: '4px'
-  },
+    gap: '12px', overflowY: 'auto', maxHeight: 'calc(100vh - 300px)', paddingRight: '4px'
+  },//add calc(100vh - 300px) for more responsivness
   vaultItem: {
     backgroundColor: '#1e293b', borderRadius: '12px', border: '1px solid #334155',
     padding: '14px', display: 'flex', flexDirection: 'column', gap: '12px',
@@ -282,12 +282,12 @@ const styles = {
   actionButton: {
     flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: '8px', backgroundColor: 'rgba(15, 23, 42, 0.5)', border: '1px solid #334155',
-    borderRadius: '10px', color: '#64748b', fontSize: '12px', cursor: 'pointer'
+    borderRadius: '10px', color: '#64748b', fontSize: '12px', cursor: 'pointer',transition :'all 0.2s ease'
   },
   primaryButton: {
     flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
     padding: '8px', background: '#10b981', border: 'none', borderRadius: '10px',
-    color: '#ffffff', fontSize: '12px', fontWeight: '600', cursor: 'pointer'
+    color: '#ffffff', fontSize: '12px', fontWeight: '600', cursor: 'pointer',transition: 'all 0.2s ease'
   },
   // PENDING CARD STYLES
   pendingCard: {
@@ -302,11 +302,11 @@ const styles = {
   pendingActions: { display: 'flex', gap: '8px' },
   saveButton: {
     flex: 1, background: '#3b82f6', color: 'white', border: 'none', padding: '8px',
-    borderRadius: '6px', fontWeight: '600', cursor: 'pointer', fontSize: '12px'
+    borderRadius: '6px', fontWeight: '600', cursor: 'pointer', fontSize: '12px',transition: 'all 0.2s ease'
   },
   discardButton: {
     flex: 1, background: 'transparent', color: '#94a3b8', border: '1px solid #475569',
-    padding: '8px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', fontSize: '12px'
+    padding: '8px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '12px',transition: 'all 0.2s ease'
   }
 };
 
