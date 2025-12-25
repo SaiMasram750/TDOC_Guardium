@@ -137,7 +137,7 @@ export default function Login({ onUnlock }) {
             onClick={() => setShowPassword(!showPassword)}
             style={styles.eyeButton}
           >
-            {showPassword ? '☁️' : '✨'}
+            {showPassword ? '❌' : '👁️'}
           </button>
         </div>
 
@@ -145,7 +145,7 @@ export default function Login({ onUnlock }) {
           <div style={{
             ...styles.strengthFill,
             width: `${Math.min((password.length / 8) * 100, 100)}%`,
-            background: password.length >= 8 ? '#10b981' : '#334155'
+            background: password.length >= 8 ? '#cde517ff' : '#0f6ae9ff'
           }}></div>
         </div>
 
@@ -189,14 +189,14 @@ const keyframes = `
     to { transform: rotate(360deg); }
   }
   @keyframes pulse {
-    0%, 100% { opacity: 0.15; }
-    50% { opacity: 0.25; }
+    0%, 100% { opacity: 0.15;    transform: translateX(-50%) scale(1); }
+    50% { opacity: 0.25;    transform: translateX(-50%) scale(1.05); }
   }
 `;
 
 const styles = {
   container: {
-    width: '100vh',
+    width: '100vw',
     height: '100%',
     backgroundColor: '#0f172a',
     display: 'flex',
@@ -220,7 +220,7 @@ const styles = {
     transform: 'translateX(-50%)',
     width: '300px',
     height: '300px',
-    backgroundColor: '#10b981',
+    backgroundColor: '#b0e21aff',
     borderRadius: '50%',
     filter: 'blur(80px)',
     opacity: 0.15,
@@ -292,14 +292,15 @@ const styles = {
     width: '100%',
     maxWidth: '280px',
     padding: '14px',
-    background: '#10b981',
+    background: '#bdf71cff',
     borderRadius: '16px',
     border: 'none',
     color: '#ffffff',
     fontSize: '15px',
     fontWeight: '600',
-    boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)',
-    transition: 'all 0.3s ease'
+    boxShadow: '0 4px 16px rgba(194, 114, 40, 0.3)',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer' //Add cursor
   },
   toggleButton: {
     fontSize: '14px',
@@ -313,8 +314,8 @@ const styles = {
   spinner: {
     width: '24px',
     height: '24px',
-    border: '3px solid #1e293b',
-    borderTop: '3px solid #10b981',
+    border: '4px solid #1e293b',
+    borderTop: '3px solid #bbee21ff',
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite'
   }
