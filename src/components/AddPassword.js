@@ -120,7 +120,7 @@ export default function AddPassword({ vault, masterPassword, onUpdate }) {
                 onClick={() => setShowPassword(!showPassword)}
                 style={styles.eyeButton}
               >
-                {showPassword ? '☁️' : '✨'}
+                {showPassword ? '❌' : '👁️'}
               </button>
             </div>
 
@@ -128,7 +128,7 @@ export default function AddPassword({ vault, masterPassword, onUpdate }) {
               <div style={{
                 ...styles.strengthFill,
                 width: `${Math.min((password.length / 12) * 100, 100)}%`,
-                background: password.length >= 12 ? '#10b981' : '#334155'
+                background: password.length >= 12 ?'#cde517ff' : '#0f6ae9ff'
               }}></div>
             </div>
 
@@ -179,6 +179,10 @@ const keyframes = `
     0%, 100% { opacity: 0.15; }
     50% { opacity: 0.25; }
   }
+     @keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 `;
 
 const styles = {
@@ -188,7 +192,7 @@ const styles = {
   },
   container: {
     width: '100%',
-    height: '100%',
+    height: '100vh',//ADDED FULL viewport height
     backgroundColor: '#0f172a',
     display: 'flex',
     alignItems: 'center',
@@ -211,7 +215,7 @@ const styles = {
     transform: 'translateX(-50%)',
     width: '300px',
     height: '300px',
-    backgroundColor: '#10b981',
+    backgroundColor: '#8e9d39ff',
     borderRadius: '50%',
     filter: 'blur(80px)',
     opacity: 0.15,
@@ -221,10 +225,11 @@ const styles = {
     position: 'relative',
     zIndex: 10,
     width: '100%',
+     maxWidth: '320px', //ADDED Constraint
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '16px'
+    gap: '16px', animation: 'slideIn 0.5s ease-out'// for entry animation
   },
   title: {
     fontSize: '32px',
@@ -269,7 +274,8 @@ const styles = {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    fontSize: '14px'
+    fontSize: '14px',
+     padding: '4px'
   },
   strengthBar: {
     height: '4px',
@@ -281,19 +287,20 @@ const styles = {
   },
   strengthFill: {
     height: '100%',
+     borderRadius: '10px' ,
     transition: 'all 0.4s ease'
   },
   button: {
     width: '100%',
     maxWidth: '280px',
     padding: '14px',
-    background: '#10b981',
+    background: '#cde517ff' ,
     borderRadius: '16px',
     border: 'none',
-    color: '#ffffff',
+    color: '#171313ff',
     fontSize: '15px',
     fontWeight: '600',
-    boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)',
+    boxShadow: '0 4px 16px rgba(162, 226, 24, 0.3)',
     transition: 'all 0.3s ease'
   },
   toggleButton: {
