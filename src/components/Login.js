@@ -3,11 +3,15 @@ import { loadVault, saveVault } from "../utils/storage";
 import { encryptVault, decryptVault } from "../utils/CryptoService";
 import { verifyVault, writeVaultHash } from "../utils/web3Service";
 import Toast from './Toast';
-
-export default function Login({ onUnlock }) {
-  if (!isMetaMaskInstalled()) { 
-    return <p> Please install MetaMask to use Guardium.</p>; 
+//Function to check metamask intallation
+const checkMetaMaskInstalled = () => {
+  if (!window.ethereum) {
+    alert("⚠️ MetaMask Not Installed!\n\nPlease install MetaMask extension from:\nhttps://metamask.io/download/\n\nThen refresh this page.");
+    return false;
   }
+  return true;
+};
+export default function Login({ onUnlock }) {
   const [password, setPassword] = useState("");
   const [vaultExists, setVaultExists] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -16,6 +20,7 @@ export default function Login({ onUnlock }) {
   const [processing, setProcessing] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("error"); // Add toast type state
+    const [metaMaskInstalled, setMetaMaskInstalled] = useState(true);//To check Metamask state 
 
   const showToast = (msg, type = "error") => { // Accept type parameter
     setToastMessage(msg);
@@ -25,13 +30,15 @@ export default function Login({ onUnlock }) {
 
   useEffect(() => {
     async function init() {
-      try {
+      try {  
+          
+           
         const vault = await loadVault();
         setVaultExists(!!vault);
         setStatus(vault ? "Welcome back!" : "Create your first vault");
       } catch (err) {
-        console.error(err);
-        setStatus("Something went wrong");
+         console.error(err);
+      setStatus("Something went wrong");
       } finally {
         setLoading(false);
       }
@@ -87,16 +94,20 @@ export default function Login({ onUnlock }) {
       const decrypted = await decryptVault(encryptedVault, password);
       showToast("Vault unlocked!", "success");
       setTimeout(() => onUnlock(decrypted, password), 800);
-    } catch (err) {
-      showToast("Wrong password", "error");
-      setPassword("");
-      setStatus("Unlock your Vault");
+    } catch (err){
+    setPassword("");
+    setStatus("Unlock your Vault");
     } finally {
       setProcessing(false);
     }
   };
 
   const handleAuth = () => {
+    
+  // CHECK METAMASK BEFORE DOING ANYTHING
+  if (!checkMetaMaskInstalled()) {
+    return; // Stop if MetaMask not found
+  }
     if (vaultExists) {
       handleUnlock();
     } else {
@@ -148,7 +159,7 @@ export default function Login({ onUnlock }) {
           <div style={{
             ...styles.strengthFill,
             width: `${Math.min((password.length / 8) * 100, 100)}%`,
-            background: password.length >= 8 ? '#b0eb3bff' : '#334155'
+            background: password.length >= 8 ? '#a0b910ff' : '#334155'
           }}></div>
         </div>
 
@@ -223,7 +234,7 @@ const styles = {
     transform: 'translateX(-50%)',
     width: '300px',
     height: '300px',
-    backgroundColor: '#c8e839ff',
+    backgroundColor: '#c6e92aff',
     borderRadius: '50%',
     filter: 'blur(80px)',
     opacity: 0.15,
@@ -295,13 +306,13 @@ const styles = {
     width: '100%',
     maxWidth: '280px',
     padding: '14px',
-    background: '#b0b910ff',
+    background: '#c6e92aff',
     borderRadius: '16px',
     border: 'none',
     color: '#ffffff',
     fontSize: '15px',
     fontWeight: '600',
-    boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)',
+    boxShadow: '0 4px 16px rgba(226, 219, 29, 0.3)',
     transition: 'all 0.3s ease'
   },
   toggleButton: {
@@ -316,8 +327,8 @@ const styles = {
   spinner: {
     width: '24px',
     height: '24px',
-    border: '3px solid #bbb957ff',
-    borderTop: '3px solid #b9b910ff',
+    border: '3px solid #1e293b',
+    borderTop: '3px solid #e4e41dff',
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite'
   }
