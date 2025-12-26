@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { loadVault, saveVault } from "../utils/storage";
 import { encryptVault, decryptVault } from "../utils/CryptoService";
-import { verifyVault, writeVaultHash } from "../utils/web3Service";
+import { verifyVault, writeVaultHash, createMetaMaskProvider } from "../utils/web3Service";
 import Toast from './Toast';
-//Function to check metamask intallation
-const checkMetaMaskInstalled = () => {
-  if (!window.ethereum) {
-    alert("⚠️ MetaMask Not Installed!\n\nPlease install MetaMask extension from:\nhttps://metamask.io/download/\n\nThen refresh this page.");
-    return false;
-  }
-  return true;
-};
+
 export default function Login({ onUnlock }) {
   const [password, setPassword] = useState("");
   const [vaultExists, setVaultExists] = useState(false);
@@ -19,31 +12,39 @@ export default function Login({ onUnlock }) {
   const [showPassword, setShowPassword] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState("error"); // Add toast type state
-    const [metaMaskInstalled, setMetaMaskInstalled] = useState(true);//To check Metamask state 
+  const [toastType, setToastType] = useState("error");
+  const [metaMaskInstalled, setMetaMaskInstalled] = useState(false);
 
-  const showToast = (msg, type = "error") => { // Accept type parameter
+  const showToast = (msg, type = "error") => {
     setToastMessage(msg);
     setToastType(type);
     setTimeout(() => setToastMessage(""), 3000);
   };
 
   useEffect(() => {
-    async function init() {
-      try {  
-          
-           
+    // Simple detection using the helper in web3Service.
+    // createMetaMaskProvider should return the provider or null/undefined when not available.
+    try {
+      const provider = createMetaMaskProvider && createMetaMaskProvider();
+      setMetaMaskInstalled(Boolean(provider));
+    } catch (err) {
+      // If helper throws, treat as not installed
+      setMetaMaskInstalled(false);
+    }
+
+    // Load vault state (independent of provider presence)
+    (async function initVault() {
+      try {
         const vault = await loadVault();
         setVaultExists(!!vault);
         setStatus(vault ? "Welcome back!" : "Create your first vault");
       } catch (err) {
-         console.error(err);
-      setStatus("Something went wrong");
+        console.error(err);
+        setStatus("Something went wrong");
       } finally {
         setLoading(false);
       }
-    }
-    init();
+    })();
   }, []);
 
   const handleCreateVault = async () => {
@@ -63,7 +64,7 @@ export default function Login({ onUnlock }) {
       showToast("Vault created successfully!", "success");
       setTimeout(() => onUnlock(emptyVault, password), 1000);
     } catch (err) {
-      showToast("Creation failed: " + err.message, "error");
+      showToast("Creation failed: " + (err?.message || err), "error");
       setStatus("Create Master Password");
     } finally {
       setProcessing(false);
@@ -94,20 +95,39 @@ export default function Login({ onUnlock }) {
       const decrypted = await decryptVault(encryptedVault, password);
       showToast("Vault unlocked!", "success");
       setTimeout(() => onUnlock(decrypted, password), 800);
-    } catch (err){
-    setPassword("");
-    setStatus("Unlock your Vault");
+    } catch (err) {
+      // Restore user-visible error feedback on failed unlocks
+      setPassword("");
+      setStatus("Unlock your Vault");
+      showToast(err?.message || "Wrong password", "error");
     } finally {
       setProcessing(false);
     }
   };
 
+  const handleConnectMetaMask = async () => {
+    try {
+      const mm = createMetaMaskProvider && createMetaMaskProvider();
+      if (!mm) {
+        setMetaMaskInstalled(false);
+        showToast("MetaMask not found. Please install it to continue.", "error");
+        return;
+      }
+      // This will prompt the MetaMask popup if not already connected
+      await mm.request({ method: "eth_requestAccounts" });
+      setMetaMaskInstalled(true);
+      showToast("MetaMask connected", "success");
+    } catch (err) {
+      showToast(err?.message || "Connection to MetaMask failed", "error");
+    }
+  };
+
   const handleAuth = () => {
-    
-  // CHECK METAMASK BEFORE DOING ANYTHING
-  if (!checkMetaMaskInstalled()) {
-    return; // Stop if MetaMask not found
-  }
+    if (!metaMaskInstalled) {
+      showToast("MetaMask not installed. Please install or connect MetaMask.", "error");
+      return;
+    }
+
     if (vaultExists) {
       handleUnlock();
     } else {
@@ -127,66 +147,98 @@ export default function Login({ onUnlock }) {
   return (
     <div style={styles.container}>
       <style>{keyframes}</style>
-      
+
       <div style={styles.bgEffects}>
         <div style={styles.colorBlur}></div>
       </div>
 
-      <div style={styles.content}>
-        <h1 style={styles.title}>{vaultExists ? "Welcome back!" : "New Vault"}</h1>
-        <p style={styles.status}>{status}</p>
-        
-        <div style={styles.inputWrapper}>
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="master password"
-            style={styles.input}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && !processing && handleAuth()}
-            disabled={processing}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            style={styles.eyeButton}
-          >
-            {showPassword ? '❌' : '👁️'}
-          </button>
-        </div>
-
-        <div style={styles.strengthBar}>
-          <div style={{
-            ...styles.strengthFill,
-            width: `${Math.min((password.length / 8) * 100, 100)}%`,
-            background: password.length >= 8 ? '#a0b910ff' : '#334155'
-          }}></div>
-        </div>
-
-        <button
-          onClick={handleAuth}
-          disabled={processing || password.length < 8}
-          style={{
-            ...styles.button,
-            opacity: (processing || password.length < 8) ? 0.6 : 1,
-            cursor: (processing || password.length < 8) ? 'default' : 'pointer'
-          }}
-        >
-          {processing ? "please wait..." : vaultExists ? "unlock" : "create"}
-        </button>
-
-        {!processing && (
-          <button
-            onClick={() => {
-              setVaultExists((prev) => !prev);
-              setStatus(!vaultExists ? "Unlock your Vault" : "Create Master Password");
-              setPassword("");
-            }}
-            style={styles.toggleButton}
-          >
-            {vaultExists ? "switch to create" : "already have one?"}
-          </button>
+      <div style={{ width: '100%', maxWidth: '420px' }}>
+        {!metaMaskInstalled && (
+          <div style={styles.metaMaskBanner}>
+            <div>
+              <strong style={{ display: 'block', marginBottom: 6 }}>MetaMask required</strong>
+              <div style={{ color: '#cbd5e1', fontSize: 13 }}>
+                MetaMask is not detected in your browser. Install MetaMask or connect it to continue.
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={handleConnectMetaMask}
+                style={styles.connectButton}
+                type="button"
+              >
+                Connect
+              </button>
+              <a
+                href="https://metamask.io/download/"
+                target="_blank"
+                rel="noreferrer"
+                style={styles.installLink}
+              >
+                Install
+              </a>
+            </div>
+          </div>
         )}
+
+        <div style={styles.content}>
+          <h1 style={styles.title}>{vaultExists ? "Welcome back!" : "New Vault"}</h1>
+          <p style={styles.status}>{status}</p>
+
+          <div style={styles.inputWrapper}>
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="master password"
+              style={styles.input}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && !processing && handleAuth()}
+              disabled={processing || !metaMaskInstalled}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={styles.eyeButton}
+              disabled={!metaMaskInstalled}
+            >
+              {showPassword ? '❌' : '👁️'}
+            </button>
+          </div>
+
+          <div style={styles.strengthBar}>
+            <div style={{
+              ...styles.strengthFill,
+              width: `${Math.min((password.length / 8) * 100, 100)}%`,
+              background: password.length >= 8 ? '#a0b910ff' : '#334155'
+            }}></div>
+          </div>
+
+          <button
+            onClick={handleAuth}
+            disabled={processing || password.length < 8 || !metaMaskInstalled}
+            style={{
+              ...styles.button,
+              opacity: (processing || password.length < 8 || !metaMaskInstalled) ? 0.6 : 1,
+              cursor: (processing || password.length < 8 || !metaMaskInstalled) ? 'default' : 'pointer'
+            }}
+          >
+            {processing ? "please wait..." : vaultExists ? "unlock" : "create"}
+          </button>
+
+          {!processing && (
+            <button
+              onClick={() => {
+                setVaultExists((prev) => !prev);
+                setStatus(!vaultExists ? "Unlock your Vault" : "Create Master Password");
+                setPassword("");
+              }}
+              style={styles.toggleButton}
+              disabled={!metaMaskInstalled}
+            >
+              {vaultExists ? "switch to create" : "already have one?"}
+            </button>
+          )}
+        </div>
       </div>
 
       {toastMessage && <Toast message={toastMessage} type={toastType} />}
@@ -331,5 +383,35 @@ const styles = {
     borderTop: '3px solid #e4e41dff',
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite'
+  },
+  metaMaskBanner: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+    padding: '12px 14px',
+    borderRadius: 12,
+    marginBottom: 16,
+    background: '#0b1220',
+    border: '1px solid #263347',
+    color: '#e2e8f0'
+  },
+  connectButton: {
+    padding: '8px 12px',
+    borderRadius: 8,
+    border: 'none',
+    background: '#3b82f6',
+    color: '#fff',
+    cursor: 'pointer'
+  },
+  installLink: {
+    display: 'inline-block',
+    padding: '8px 12px',
+    borderRadius: 8,
+    background: 'transparent',
+    color: '#93c5fd',
+    textDecoration: 'none',
+    border: '1px solid #183253',
+    alignSelf: 'center'
   }
 };
