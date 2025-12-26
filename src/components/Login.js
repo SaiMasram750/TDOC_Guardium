@@ -5,6 +5,9 @@ import { verifyVault, writeVaultHash } from "../utils/web3Service";
 import Toast from './Toast';
 
 export default function Login({ onUnlock }) {
+  if (!isMetaMaskInstalled()) { 
+    return <p> Please install MetaMask to use Guardium.</p>; 
+  }
   const [password, setPassword] = useState("");
   const [vaultExists, setVaultExists] = useState(false);
   const [loading, setLoading] = useState(true);
