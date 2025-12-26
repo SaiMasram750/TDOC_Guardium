@@ -115,11 +115,11 @@ export default function AddPassword({ vault, masterPassword, onUpdate }) {
                 onKeyPress={(e) => e.key === 'Enter' && !saving && site.trim() && password.trim() && save()}
                 disabled={saving}
               />
-              <button
+              <button>
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={styles.eyeButton}
-              >
+              
                 {showPassword ? '❌' : '👁️'}
               </button>
             </div>
@@ -128,7 +128,7 @@ export default function AddPassword({ vault, masterPassword, onUpdate }) {
               <div style={{
                 ...styles.strengthFill,
                 width: `${Math.min((password.length / 12) * 100, 100)}%`,
-                background: password.length >= 12 ?'#cde517ff' : '#0f6ae9ff'
+                background: password.length >= 12 ? '#b6b910ff' : '#334155'
               }}></div>
             </div>
 
@@ -179,10 +179,6 @@ const keyframes = `
     0%, 100% { opacity: 0.15; }
     50% { opacity: 0.25; }
   }
-     @keyframes slideIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
 `;
 
 const styles = {
@@ -192,7 +188,7 @@ const styles = {
   },
   container: {
     width: '100%',
-    height: '100vh',//ADDED FULL viewport height
+    height: '100%',
     backgroundColor: '#0f172a',
     display: 'flex',
     alignItems: 'center',
@@ -215,7 +211,7 @@ const styles = {
     transform: 'translateX(-50%)',
     width: '300px',
     height: '300px',
-    backgroundColor: '#8e9d39ff',
+    backgroundColor: '#10b981',
     borderRadius: '50%',
     filter: 'blur(80px)',
     opacity: 0.15,
@@ -225,11 +221,10 @@ const styles = {
     position: 'relative',
     zIndex: 10,
     width: '100%',
-     maxWidth: '320px', //ADDED Constraint
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '16px', animation: 'slideIn 0.5s ease-out'// for entry animation
+    gap: '16px'
   },
   title: {
     fontSize: '32px',
@@ -274,8 +269,7 @@ const styles = {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    fontSize: '14px',
-     padding: '4px'
+    fontSize: '14px'
   },
   strengthBar: {
     height: '4px',
@@ -287,20 +281,19 @@ const styles = {
   },
   strengthFill: {
     height: '100%',
-     borderRadius: '10px' ,
     transition: 'all 0.4s ease'
   },
   button: {
     width: '100%',
     maxWidth: '280px',
     padding: '14px',
-    background: '#cde517ff' ,
+    background: '#10b981',
     borderRadius: '16px',
     border: 'none',
-    color: '#171313ff',
+    color: '#ffffff',
     fontSize: '15px',
     fontWeight: '600',
-    boxShadow: '0 4px 16px rgba(162, 226, 24, 0.3)',
+    boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)',
     transition: 'all 0.3s ease'
   },
   toggleButton: {
